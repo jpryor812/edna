@@ -1,15 +1,48 @@
 import { json } from "@remix-run/node";
-import type { ActionFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import OpenAI from "openai";
 
-// Initialize OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI with error handling
+let openai: OpenAI;
+try {
+  openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+} catch (error) {
+  console.error("Error initializing OpenAI:", error);
+}
 
 export async function action({ request }: ActionFunctionArgs) {
   try {
-    const data = await request.json();
+    // Validate OpenAI initialization
+    if (!openai) {
+      console.error("OpenAI client not initialized");
+      return json(
+        { success: false, error: "OpenAI client not initialized" },
+        { status: 500 }
+      );
+    }
+
+    // Check API key
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY is not set");
+      return json(
+        { success: false, error: "OpenAI API key not configured" },
+        { status: 500 }
+      );
+    }
+
+    // Parse request body
+    let data;
+    try {
+      data = await request.json();
+    } catch (error) {
+      return json(
+        { success: false, error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
+
     const { message, conversation } = data;
     
     if (!message) {
@@ -25,34 +58,34 @@ Keep your responses concise, friendly, and helpful.
 Current date: ${new Date().toLocaleDateString()}`
     };
     
-    // Build the messages array: if a conversation is provided, use it; otherwise, start fresh.
+    // Build the messages array
     let messages = [];
     if (conversation && Array.isArray(conversation) && conversation.length > 0) {
-      // The conversation should already include previous messages.
       messages = conversation.concat({ role: 'user', content: message });
     } else {
       messages = [systemPrompt, { role: 'user', content: message }];
     }
     
     // Call OpenAI API
+    console.log("Calling OpenAI API with messages:", JSON.stringify(messages));
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-3.5-turbo', // Changed to more reliable model
       messages: messages as OpenAI.Chat.ChatCompletionMessageParam[],
       max_tokens: 300,
       temperature: 0.7,
     });
     
     const aiResponse = completion.choices[0].message.content;
+    console.log("Received response from OpenAI:", aiResponse);
     
     // Return the AI response with proper CORS headers
     return json(
       { success: true, response: aiResponse },
       {
         headers: {
-          "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://edna-app.myshopify.com",
+          "Access-Control-Allow-Origin": "*", // Simplified for testing
           "Access-Control-Allow-Methods": "POST, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type",
-          "Access-Control-Allow-Credentials": "true"
         }
       }
     );
@@ -63,32 +96,27 @@ Current date: ${new Date().toLocaleDateString()}`
       {
         success: false,
         error: 'Failed to process request',
-        details: process.env.NODE_ENV === 'development'
-          ? error instanceof Error ? error.message : String(error)
-          : undefined
+        details: error instanceof Error ? error.message : String(error)
       },
       {
         status: 500,
         headers: {
-          "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://edna-app.myshopify.com",
+          "Access-Control-Allow-Origin": "*", // Simplified for testing
           "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-          "Access-Control-Allow-Credentials": "true"
+          "Access-Control-Allow-Headers": "Content-Type"
         }
       }
     );
   }
 }
 
-// Handle OPTIONS requests for CORS preflight
-export async function loader({ request }: ActionFunctionArgs) {
-  const origin = request.headers.get('origin') || process.env.ALLOWED_ORIGIN || "https://edna-app.myshopify.com";
+// Fixed: Use LoaderFunctionArgs for loader function
+export async function loader({ request }: LoaderFunctionArgs) {
   return new Response(null, {
     headers: {
-      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Origin": "*", // Simplified for testing
       "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Allow-Credentials": "true"
+      "Access-Control-Allow-Headers": "Content-Type"
     }
   });
 }

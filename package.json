@@ -2,7 +2,7 @@
   "name": "edna",
   "private": true,
   "scripts": {
-    "vercel-build": "prisma generate && remix vite:build",
+    "vercel-build": "prisma generate && prisma migrate deploy && remix vite:build",
     "build": "remix vite:build",
     "dev": "shopify app dev",
     "config:link": "shopify app config link",
