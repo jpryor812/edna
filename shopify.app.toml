@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "f44439854d4a7c4c7e1693b13abe1460"
-application_url = "https://alpine-helpful-prepare-use.trycloudflare.com"
+application_url = "https://delivers-word-brain-jackets.trycloudflare.com"
 embedded = true
 name = "Edna"
 handle = "edna-1"
@@ -27,9 +27,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://alpine-helpful-prepare-use.trycloudflare.com/auth/callback",
-  "https://alpine-helpful-prepare-use.trycloudflare.com/auth/shopify/callback",
-  "https://alpine-helpful-prepare-use.trycloudflare.com/api/auth/callback"
+  "https://delivers-word-brain-jackets.trycloudflare.com/auth/callback",
+  "https://delivers-word-brain-jackets.trycloudflare.com/auth/shopify/callback",
+  "https://delivers-word-brain-jackets.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
