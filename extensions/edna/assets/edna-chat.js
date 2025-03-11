@@ -6,25 +6,37 @@ function initEdnaChat(apiUrl) {
   const chatMessages = document.getElementById('edna-chat-messages');
   const chatInput = document.getElementById('edna-chat-input');
   const chatSend = document.getElementById('edna-chat-send');
-  
-  // Maintain conversation context on the client side.
-  // This array will accumulate the conversation during the session.
+
+  // In-memory conversation context; resets on page reload.
   let conversationContext = [];
   
-  // State flags
+  // Inactivity timer variable (optional)
+  let inactivityTimeout;
+  const INACTIVITY_DURATION = 10 * 60 * 1000; // 10 minutes
+
   let isOpen = false;
   let isWaitingForResponse = false;
-  
-  // Toggle chat interface visibility
+
+  // Reset inactivity timer
+  function resetInactivityTimer() {
+    clearTimeout(inactivityTimeout);
+    inactivityTimeout = setTimeout(() => {
+      conversationContext = [];
+      console.log("Conversation reset due to inactivity.");
+    }, INACTIVITY_DURATION);
+  }
+
+  // Toggle chat interface
   function toggleChat() {
     isOpen = !isOpen;
     chatInterface.style.display = isOpen ? 'flex' : 'none';
     if (isOpen) {
       chatInput.focus();
       chatMessages.scrollTop = chatMessages.scrollHeight;
+      resetInactivityTimer();
     }
   }
-  
+
   // Append a new message to the chat window
   function addMessage(content, isUser = false) {
     const messageDiv = document.createElement('div');
@@ -36,8 +48,8 @@ function initEdnaChat(apiUrl) {
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
-  
-  // Display a typing indicator
+
+  // Show typing indicator
   function showTypingIndicator() {
     const indicator = document.createElement('div');
     indicator.className = 'edna-message edna-ai-message edna-typing';
@@ -49,37 +61,37 @@ function initEdnaChat(apiUrl) {
     chatMessages.appendChild(indicator);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
-  
-  // Remove the typing indicator
+
+  // Remove typing indicator
   function removeTypingIndicator() {
     const indicator = document.getElementById('edna-typing-indicator');
     if (indicator) {
       indicator.remove();
     }
   }
-  
-  // Send message and conversation context to the API
+
+  // Send message to API along with conversation context
   async function sendMessageToApi(message) {
     try {
       isWaitingForResponse = true;
       showTypingIndicator();
-      
-      // Append the user's new message to the conversation context.
+
+      // Add user's message to the context
       conversationContext.push({ role: 'user', content: message });
-      
-      // Construct the payload with the current conversation history.
+      resetInactivityTimer();
+
       const payload = {
         message: message,
         conversation: conversationContext
       };
-      
+
       const response = await fetch(`${apiUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -102,8 +114,8 @@ function initEdnaChat(apiUrl) {
       isWaitingForResponse = false;
     }
   }
-  
-  // Handle sending a message from the input
+
+  // Handle sending a message
   function handleSendMessage() {
     const message = chatInput.value.trim();
     if (message && !isWaitingForResponse) {
@@ -112,8 +124,8 @@ function initEdnaChat(apiUrl) {
       sendMessageToApi(message);
     }
   }
-  
-  // Set up event listeners
+
+  // Event Listeners
   chatButton.addEventListener('click', toggleChat);
   chatClose.addEventListener('click', toggleChat);
   chatSend.addEventListener('click', handleSendMessage);
@@ -130,8 +142,6 @@ function initEdnaChat(apiUrl) {
   });
   chatInput.addEventListener('input', () => {
     chatInput.style.height = 'auto';
-    chatInput.style.height = (chatInput.scrollHeight < 120)
-      ? chatInput.scrollHeight + 'px'
-      : '120px';
+    chatInput.style.height = (chatInput.scrollHeight < 120) ? chatInput.scrollHeight + 'px' : '120px';
   });
 }
