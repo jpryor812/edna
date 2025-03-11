@@ -1,13 +1,14 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "f44439854d4a7c4c7e1693b13abe1460"
-application_url = "https://example.com/"
+application_url = "https://allows-midi-ceo-how.trycloudflare.com"
 embedded = true
 name = "Edna"
 handle = "edna-1"
 
 [build]
 include_config_on_deploy = true
+automatically_update_urls_on_dev = true
 
 [webhooks]
 api_version = "2025-01"
@@ -25,7 +26,11 @@ api_version = "2025-01"
 scopes = "write_products"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [
+  "https://allows-midi-ceo-how.trycloudflare.com/auth/callback",
+  "https://allows-midi-ceo-how.trycloudflare.com/auth/shopify/callback",
+  "https://allows-midi-ceo-how.trycloudflare.com/api/auth/callback"
+]
 
 [pos]
 embedded = false
