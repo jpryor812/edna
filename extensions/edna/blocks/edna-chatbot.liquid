@@ -66,10 +66,8 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Use a hardcoded URL for testing (replace with your actual app URL)
-  const apiUrl = 'https://b433-2600-4041-5874-7700-d1c3-4428-a2b4-c529.ngrok-free.app';
-  console.log('Using hardcoded API URL:', apiUrl);
-  initEdnaChat(apiUrl);
-});
+  // Initialize chat with the app URL that will handle API requests
+  document.addEventListener('DOMContentLoaded', function() {
+    initEdnaChat('{{ app.metafields.edna.api_url }}');
+  });
 </script>
